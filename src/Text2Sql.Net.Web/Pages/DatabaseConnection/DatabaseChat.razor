@@ -3,10 +3,15 @@
 @using Text2Sql.Net.Domain.Interface
 @using Text2Sql.Net.Repositories.Text2Sql.DatabaseConnection
 @using Text2Sql.Net.Repositories.Text2Sql.ChatHistory
+@using Text2Sql.Net.Domain.Model
 @using AntDesign
+@using Microsoft.AspNetCore.Components.Forms
+@using System.IO
+@using MiniExcelLibs
 @inject IDatabaseConnectionConfigRepository DatabaseConnectionRepository
 @inject IChatService ChatService
 @inject ISqlExecutionService SqlExecutionService
+@inject ISchemaTrainingService SchemaTrainingService
 @inject MessageService MessageService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
@@ -132,6 +137,45 @@
                 </div>
 
                 <div class="chat-input-container">
+                    <!-- Excel上传区域 -->
+
+                    <div class="excel-upload-section">
+                        <Card Size="small" Class="excel-upload-card">
+                            <div class="excel-upload-content">
+                                @if (_uploadedExcelConnection == null)
+                                {
+                                    <div class="excel-upload-area">
+                                        <Icon Type="cloud-upload" Style="font-size: 24px; color: #1890ff; margin-right: 8px;" />
+                                        <span class="upload-text">快速上传Excel文件进行问答</span>
+                                        <InputFile OnChange="OnExcelFileSelected" accept=".xlsx,.xls" style="display: none;" id="excelFileInput" />
+                                        <Button Type="@ButtonType.Primary"
+                                                Size="@ButtonSize.Small"
+                                                OnClick="TriggerExcelFileSelect"
+                                                Loading="@_uploadingExcel"
+                                                Icon="upload">
+                                            选择Excel文件
+                                        </Button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="excel-uploaded-info">
+                                        <Icon Type="file-excel" Style="color: #52c41a; margin-right: 8px;" />
+                                        <span class="uploaded-file-name">@_uploadedExcelConnection.Name</span>
+                                        <Button Type="@ButtonType.Text"
+                                                Size="@ButtonSize.Small"
+                                                Danger="true"
+                                                OnClick="ClearUploadedExcel"
+                                                Icon="delete">
+                                            移除
+                                        </Button>
+                                    </div>
+                                }
+                            </div>
+                        </Card>
+                    </div>
+
+
                     <div class="input-header-actions">
                         <Button Type="@ButtonType.Text"
                                 Danger="true"
@@ -141,7 +185,7 @@
                             清空聊天记录
                         </Button>
                     </div>
-                    
+
                     <div class="input-group-container">
                         <TextArea @bind-Value="@_userMessage"
                                   Placeholder="请输入数据库相关问题，例如：查询所有用户信息"
@@ -149,7 +193,7 @@
                                   OnPressEnter="@SendMessage"
                                   Disabled="@(_selectedConnectionId == null || _loading)"
                                   Class="message-input" />
-                        
+
                         <Button Type="@ButtonType.Primary"
                                 OnClick="@SendMessage"
                                 Loading="@_loading"
@@ -179,70 +223,70 @@
        OnCancel="@OnChartCancel"
        Style="width:95%;max-width:1400px;"
        Centered>
-    
+
     <!-- 图表控制面板 -->
     <div class="chart-control-panel">
         <Row Gutter="16">
             <Col Span="8">
-                <div class="control-group">
-                    <label class="control-label">图表类型</label>
-                    <Select TItem="ChartTypeOption"
-                            TItemValue="string"
-                            DataSource="@_chartTypes"
-                            @bind-Value="@_selectedChartType"
-                            ValueName="@nameof(ChartTypeOption.Key)"
-                            LabelName="@nameof(ChartTypeOption.Label)"
-                            Style="width: 100%;"
-                            OnSelectedItemChanged="@((chartType) => OnChartTypeChanged(chartType))">
-                        <ItemTemplate Context="chartType">
-                            <Icon Type="@chartType.Icon" Style="margin-right: 8px;" />
-                            @chartType.Label
-                        </ItemTemplate>
-                    </Select>
-                </div>
+            <div class="control-group">
+                <label class="control-label">图表类型</label>
+                <Select TItem="ChartTypeOption"
+                        TItemValue="string"
+                        DataSource="@_chartTypes"
+                        @bind-Value="@_selectedChartType"
+                        ValueName="@nameof(ChartTypeOption.Key)"
+                        LabelName="@nameof(ChartTypeOption.Label)"
+                        Style="width: 100%;"
+                        OnSelectedItemChanged="@((chartType) => OnChartTypeChanged(chartType))">
+                    <ItemTemplate Context="chartType">
+                        <Icon Type="@chartType.Icon" Style="margin-right: 8px;" />
+                        @chartType.Label
+                    </ItemTemplate>
+                </Select>
+            </div>
             </Col>
             <Col Span="8">
-                <div class="control-group">
-                    <label class="control-label">分类字段</label>
-                    <Select TItem="ColumnOption"
-                            TItemValue="string"
-                            DataSource="@_availableColumns"
-                            @bind-Value="@_selectedCategoryColumn"
-                            ValueName="@nameof(ColumnOption.Key)"
-                            LabelName="@nameof(ColumnOption.Label)"
-                            Style="width: 100%;"
-                            OnSelectedItemChanged="@((column) => OnColumnSelectionChanged(column))">
-                    </Select>
-                </div>
+            <div class="control-group">
+                <label class="control-label">分类字段</label>
+                <Select TItem="ColumnOption"
+                        TItemValue="string"
+                        DataSource="@_availableColumns"
+                        @bind-Value="@_selectedCategoryColumn"
+                        ValueName="@nameof(ColumnOption.Key)"
+                        LabelName="@nameof(ColumnOption.Label)"
+                        Style="width: 100%;"
+                        OnSelectedItemChanged="@((column) => OnColumnSelectionChanged(column))">
+                </Select>
+            </div>
             </Col>
             <Col Span="8">
-                <div class="control-group">
-                    <label class="control-label">数值字段</label>
-                    <Select TItem="ColumnOption"
-                            TItemValue="string"
-                            DataSource="@_availableColumns"
-                            @bind-Values="@_selectedValueColumns"
-                            ValueName="@nameof(ColumnOption.Key)"
-                            LabelName="@nameof(ColumnOption.Label)"
-                            Mode="multiple"
-                            Style="width: 100%;"
-                            OnSelectedItemsChanged="@((columns) => OnValueColumnsChanged(columns))">
-                    </Select>
-                </div>
+            <div class="control-group">
+                <label class="control-label">数值字段</label>
+                <Select TItem="ColumnOption"
+                        TItemValue="string"
+                        DataSource="@_availableColumns"
+                        @bind-Values="@_selectedValueColumns"
+                        ValueName="@nameof(ColumnOption.Key)"
+                        LabelName="@nameof(ColumnOption.Label)"
+                        Mode="multiple"
+                        Style="width: 100%;"
+                        OnSelectedItemsChanged="@((columns) => OnValueColumnsChanged(columns))">
+                </Select>
+            </div>
             </Col>
         </Row>
-        
+
         <div class="chart-tips">
             <Icon Type="info-circle" Style="color: #1890ff; margin-right: 4px;" />
             <span>提示：饼图仅支持单个数值字段，散点图需要至少两个数值字段</span>
         </div>
     </div>
-    
+
     <!-- 图表显示区域 -->
     <div class="chart-display-area">
         <div id="chatChartContainer" style="width:100%;height:600px;min-height:600px;"></div>
     </div>
-    
+
     <!-- 操作按钮 -->
     <div class="chart-actions">
         <Space>
@@ -258,7 +302,7 @@
             </SpaceItem>
         </Space>
     </div>
-    
+
 </Modal>
 
 <Modal Title="确认清空"
@@ -283,7 +327,7 @@
         <div style="margin-bottom: 16px;">
             <Alert Type="@AlertType.Info" Message="将创建一个问答示例供未来参考" ShowIcon="true" />
         </div>
-        
+
         <Form Model="_correctionData" LabelColSpan="4" WrapperColSpan="20">
             <FormItem Label="用户问题">
                 <TextArea @bind-Value="_correctionData.UserQuestion" Rows="2" Disabled />
@@ -322,10 +366,10 @@
         transition: all 0.3s ease;
     }
 
-    .chat-history-container.collapsed {
-        max-height: 40px;
-        overflow: hidden;
-    }
+        .chat-history-container.collapsed {
+            max-height: 40px;
+            overflow: hidden;
+        }
 
     .loading-container {
         display: flex;
@@ -441,47 +485,47 @@
             position: relative;
         }
 
-        .sql-content pre.language-sql {
-            background-color: #282c34 !important;
-            color: #abb2bf !important;
-        }
+            .sql-content pre.language-sql {
+                background-color: #282c34 !important;
+                color: #abb2bf !important;
+            }
 
-        /* 强制覆盖Prism.js默认样式 - SQL关键词高亮 */
-        .sql-content .token.keyword,
-        .sql-content pre.language-sql .token.keyword,
-        pre.language-sql .token.keyword {
-            color: #ff6b6b !important;
-            font-weight: 900 !important;
-            text-transform: uppercase !important;
-            background-color: rgba(255, 107, 107, 0.15) !important;
-            padding: 2px 4px !important;
-            border-radius: 3px !important;
-            text-shadow: 0 0 2px rgba(255, 107, 107, 0.3) !important;
-            letter-spacing: 0.5px !important;
-            display: inline-block !important;
-        }
+                /* 强制覆盖Prism.js默认样式 - SQL关键词高亮 */
+                .sql-content .token.keyword,
+                .sql-content pre.language-sql .token.keyword,
+                pre.language-sql .token.keyword {
+                    color: #ff6b6b !important;
+                    font-weight: 900 !important;
+                    text-transform: uppercase !important;
+                    background-color: rgba(255, 107, 107, 0.15) !important;
+                    padding: 2px 4px !important;
+                    border-radius: 3px !important;
+                    text-shadow: 0 0 2px rgba(255, 107, 107, 0.3) !important;
+                    letter-spacing: 0.5px !important;
+                    display: inline-block !important;
+                }
 
-        /* 特别突出显示主要SQL关键词 */
-        .sql-content .token.keyword.sql-primary,
-        .sql-content pre.language-sql .token.keyword.sql-primary,
-        pre.language-sql .token.keyword.sql-primary {
-            color: #fff !important;
-            background-color: #ff6b6b !important;
-            font-weight: 900 !important;
-            padding: 3px 6px !important;
-            border-radius: 4px !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
-            box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3) !important;
-            display: inline-block !important;
-        }
+                    /* 特别突出显示主要SQL关键词 */
+                    .sql-content .token.keyword.sql-primary,
+                    .sql-content pre.language-sql .token.keyword.sql-primary,
+                    pre.language-sql .token.keyword.sql-primary {
+                        color: #fff !important;
+                        background-color: #ff6b6b !important;
+                        font-weight: 900 !important;
+                        padding: 3px 6px !important;
+                        border-radius: 4px !important;
+                        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+                        box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3) !important;
+                        display: inline-block !important;
+                    }
 
-        /* 确保SQL代码块内所有关键词都被正确识别 */
-        .sql-content pre code .token.keyword,
-        pre.language-sql code .token.keyword {
-            color: #ff6b6b !important;
-            font-weight: 900 !important;
-            text-transform: uppercase !important;
-        }
+            /* 确保SQL代码块内所有关键词都被正确识别 */
+            .sql-content pre code .token.keyword,
+            pre.language-sql code .token.keyword {
+                color: #ff6b6b !important;
+                font-weight: 900 !important;
+                text-transform: uppercase !important;
+            }
 
         /* 后备高亮方案的样式 */
         .sql-content .sql-keyword-fallback,
@@ -532,9 +576,9 @@
             border-radius: 4px;
         }
 
-        .sql-content pre::-webkit-scrollbar-thumb:hover {
-            background: #6c7b7f;
-        }
+            .sql-content pre::-webkit-scrollbar-thumb:hover {
+                background: #6c7b7f;
+            }
 
     .query-result-content {
         margin-top: 12px;
@@ -542,7 +586,7 @@
         padding: 12px;
         border-radius: 6px;
         max-width: calc(100vw - 360px);
-        overflow-x:auto;
+        overflow-x: auto;
         border-left: 3px solid #52c41a;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
@@ -597,14 +641,14 @@
             transition: all 0.3s ease;
         }
 
-        .sql-actions .ant-btn-link:hover {
-            background-color: rgba(24, 144, 255, 0.1);
-            border-radius: 4px;
-        }
+            .sql-actions .ant-btn-link:hover {
+                background-color: rgba(24, 144, 255, 0.1);
+                border-radius: 4px;
+            }
 
-        .sql-actions .ant-btn-link .anticon {
-            margin-right: 4px;
-        }
+            .sql-actions .ant-btn-link .anticon {
+                margin-right: 4px;
+            }
 
     .result-info {
         margin-bottom: 8px;
@@ -692,6 +736,52 @@
         padding-top: 12px;
         border-top: 1px solid #f0f0f0;
     }
+
+    /* Excel上传区域样式 */
+    .excel-upload-section {
+        margin-bottom: 12px;
+    }
+
+    .excel-upload-card {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 1px dashed #1890ff;
+        border-radius: 8px;
+    }
+
+    .excel-upload-content {
+        padding: 8px 12px;
+    }
+
+    .excel-upload-area {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: space-between;
+    }
+
+    .upload-text {
+        flex: 1;
+        color: #1890ff;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .excel-uploaded-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: space-between;
+    }
+
+    .uploaded-file-name {
+        flex: 1;
+        color: #52c41a;
+        font-size: 14px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 </style>
 
 @code {
@@ -711,6 +801,10 @@
     private bool _clearingHistory = false;
     private bool _showCorrectionModal = false;
     private CorrectionData? _correctionData;
+
+    // Excel上传相关变量
+    private bool _uploadingExcel = false;
+    private DatabaseConnectionConfig? _uploadedExcelConnection;
 
     // 图表控制相关变量
     private List<ChartTypeOption> _chartTypes = new List<ChartTypeOption>();
@@ -754,20 +848,20 @@
         try
         {
             await LoadDatabaseConnections();
-            
+
             // 检查URL参数中的connectionId
             var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
             var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
             string? connectionIdFromQuery = null;
-            
+
             if (queryParams.TryGetValue("connectionId", out var connectionIdValues))
             {
                 connectionIdFromQuery = connectionIdValues.FirstOrDefault();
             }
-            
+
             // 优先使用路由参数，其次使用查询参数
             var targetConnectionId = !string.IsNullOrEmpty(ConnectionId) ? ConnectionId : connectionIdFromQuery;
-            
+
             if (!string.IsNullOrEmpty(targetConnectionId))
             {
                 _selectedConnectionId = targetConnectionId;
@@ -795,11 +889,11 @@
                 // 首次渲染后，等待更长时间确保Prism.js加载完成
                 await Task.Delay(500);
                 Console.WriteLine("开始初始化SQL高亮...");
-                
+
                 // 检查Prism.js是否加载
                 var prismLoaded = await JSRuntime.InvokeAsync<bool>("eval", "typeof Prism !== 'undefined'");
                 Console.WriteLine($"Prism.js加载状态: {prismLoaded}");
-                
+
                 if (prismLoaded)
                 {
                     await JSRuntime.InvokeVoidAsync("databaseChatFunctions.highlightAllSql");
@@ -816,7 +910,7 @@
             {
                 // 每次重新渲染后重新应用SQL语法高亮
                 await Task.Delay(200); // 等待DOM更新
-                
+
                 try
                 {
                     await JSRuntime.InvokeVoidAsync("databaseChatFunctions.highlightAllSql");
@@ -849,7 +943,7 @@
         catch (Exception ex)
         {
             Console.WriteLine($"获取数据库连接列表失败: {ex.Message}");
-            _= MessageService.Error("获取数据库连接列表失败，请刷新页面重试");
+            _ = MessageService.Error("获取数据库连接列表失败，请刷新页面重试");
             _connections = new List<DatabaseConnectionConfig>();
         }
     }
@@ -875,14 +969,14 @@
             catch (Exception ex)
             {
                 Console.WriteLine($"获取聊天历史失败: {ex.Message}");
-                _= MessageService.Error($"加载聊天历史失败: {ex.Message}");
+                _ = MessageService.Error($"加载聊天历史失败: {ex.Message}");
                 _chatHistory = new List<ChatMessage>();
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"选择数据库连接失败: {ex.Message}");
-            _= MessageService.Error($"选择数据库连接失败: {ex.Message}");
+            _ = MessageService.Error($"选择数据库连接失败: {ex.Message}");
         }
         finally
         {
@@ -912,13 +1006,13 @@
 
             // 添加用户消息到聊天历史
             var userMessage = new ChatMessage
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    ConnectionId = _selectedConnectionId,
-                    Message = currentMessage,
-                    IsUser = true,
-                    CreateTime = DateTime.Now
-                };
+            {
+                Id = Guid.NewGuid().ToString(),
+                ConnectionId = _selectedConnectionId,
+                Message = currentMessage,
+                IsUser = true,
+                CreateTime = DateTime.Now
+            };
 
             try
             {
@@ -941,7 +1035,7 @@
             {
                 try
                 {
-                    _= MessageService.Info("SQL执行出错，尝试优化中...");
+                    _ = MessageService.Info("SQL执行出错，尝试优化中...");
 
 
                     response = await ChatService.OptimizeSqlAndExecuteAsync(_selectedConnectionId, currentMessage, response.SqlQuery ?? string.Empty, response.ExecutionError);
@@ -955,7 +1049,7 @@
 
             // 添加AI响应到聊天历史
             _chatHistory.Add(response);
-            
+
             // 强制重新渲染以触发高亮
             StateHasChanged();
 
@@ -965,7 +1059,7 @@
                 try
                 {
                     var (autoResult, autoError) = await SqlExecutionService.ExecuteQueryAsync(_selectedConnectionId, response.SqlQuery);
-                    
+
                     if (!string.IsNullOrEmpty(autoError))
                     {
                         // 更新响应中的执行错误信息
@@ -979,14 +1073,14 @@
                         response.QueryResult = autoResult;
                         // 更新数据库中的聊天记录
                         await ChatService.SaveChatMessageAsync(response);
-                        
+
                         // 查询结果已经保存在response.QueryResult中
-                        
-                        _= MessageService.Success($"SQL自动执行成功，返回 {autoResult.Count} 条记录");
+
+                        _ = MessageService.Success($"SQL自动执行成功，返回 {autoResult.Count} 条记录");
                     }
                     else
                     {
-                        _= MessageService.Info("SQL自动执行成功，但未返回数据");
+                        _ = MessageService.Info("SQL自动执行成功，但未返回数据");
                     }
                 }
                 catch (Exception autoEx)
@@ -995,25 +1089,25 @@
                     // 不显示错误消息给用户，因为用户仍然可以手动执行
                 }
             }
-            
+
             // 查询结果已经在response中，界面会自动显示
         }
         catch (Exception ex)
         {
             Console.WriteLine($"处理消息失败: {ex.Message}");
-            _= MessageService.Error($"处理请求时出错: {ex.Message}");
+            _ = MessageService.Error($"处理请求时出错: {ex.Message}");
 
             // 如果是因为用户消息已经添加但处理失败，添加一个系统错误消息
             if (_chatHistory.Any(m => m.IsUser && m.Message == currentMessage && !_chatHistory.Any(r => !r.IsUser && r.CreateTime > m.CreateTime)))
             {
                 _chatHistory.Add(new ChatMessage
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        ConnectionId = _selectedConnectionId,
-                        Message = $"处理您的请求时出现错误：{ex.Message}",
-                        IsUser = false,
-                        CreateTime = DateTime.Now
-                    });
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    ConnectionId = _selectedConnectionId,
+                    Message = $"处理您的请求时出现错误：{ex.Message}",
+                    IsUser = false,
+                    CreateTime = DateTime.Now
+                });
             }
         }
         finally
@@ -1043,21 +1137,21 @@
 
             if (!string.IsNullOrEmpty(errorMessage))
             {
-                _= MessageService.Error($"SQL执行错误: {errorMessage}");
+                _ = MessageService.Error($"SQL执行错误: {errorMessage}");
             }
             else if (result != null)
             {
-                _= MessageService.Success($"SQL执行成功，返回 {result.Count} 条记录");
+                _ = MessageService.Success($"SQL执行成功，返回 {result.Count} 条记录");
                 // 结果会通过聊天消息显示，无需额外处理
             }
             else
             {
-                _= MessageService.Info("SQL执行成功，但未返回数据");
+                _ = MessageService.Info("SQL执行成功，但未返回数据");
             }
         }
         catch (Exception ex)
         {
-            _= MessageService.Error($"执行SQL时出错: {ex.Message}");
+            _ = MessageService.Error($"执行SQL时出错: {ex.Message}");
         }
         finally
         {
@@ -1088,12 +1182,12 @@
         try
         {
             await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", sql);
-            _= MessageService.Success("SQL已复制到剪贴板");
+            _ = MessageService.Success("SQL已复制到剪贴板");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"复制SQL失败: {ex.Message}");
-            _= MessageService.Error("复制失败，请手动选择并复制");
+            _ = MessageService.Error("复制失败，请手动选择并复制");
         }
     }
 
@@ -1126,7 +1220,7 @@
         try
         {
             _availableColumns = new List<ColumnOption>();
-            
+
             // 获取所有列作为可选项
             var firstRow = _currentChartMessage.QueryResult.FirstOrDefault();
             if (firstRow != null)
@@ -1135,7 +1229,7 @@
                 {
                     var value = firstRow[key];
                     var isNumeric = IsNumericValue(value);
-                    
+
                     _availableColumns.Add(new ColumnOption
                     {
                         Key = key,
@@ -1147,10 +1241,10 @@
 
             // 设置默认选择
             if (!_availableColumns.Any()) return;
-            
+
             var categoryCol = _availableColumns.FirstOrDefault(c => c.Type == "category");
             var valueCol = _availableColumns.FirstOrDefault(c => c.Type == "value");
-            
+
             _selectedCategoryColumn = categoryCol?.Key ?? _availableColumns.First().Key;
             _selectedValueColumns = valueCol != null ? new[] { valueCol.Key } : new[] { _availableColumns.Last().Key };
         }
@@ -1167,9 +1261,9 @@
     private bool IsNumericValue(object? value)
     {
         if (value == null) return false;
-        
+
         return value is int or long or decimal or double or float or byte or short or uint or ulong or ushort or sbyte ||
-               (value is string str && !string.IsNullOrWhiteSpace(str) && 
+               (value is string str && !string.IsNullOrWhiteSpace(str) &&
                 (decimal.TryParse(str, out _) || double.TryParse(str, out _)));
     }
 
@@ -1224,8 +1318,8 @@
                 }
             }
 
-            await JSRuntime.InvokeVoidAsync("echartsInterop.renderCustomChart", 
-                "chatChartContainer", 
+            await JSRuntime.InvokeVoidAsync("echartsInterop.renderCustomChart",
+                "chatChartContainer",
                 _currentChartMessage.QueryResult,
                 _selectedChartType,
                 _selectedCategoryColumn,
@@ -1249,7 +1343,7 @@
         try
         {
             await JSRuntime.InvokeVoidAsync("echartsInterop.renderAutoChart", "chatChartContainer", _currentChartMessage.QueryResult);
-            
+
             // 重置选择状态
             InitializeAvailableColumns();
             StateHasChanged();
@@ -1269,16 +1363,16 @@
     {
         if (message?.QueryResult == null || message.QueryResult.Count == 0)
         {
-            _= MessageService.Info("暂无可视化数据");
+            _ = MessageService.Info("暂无可视化数据");
             return;
         }
 
         _currentChartMessage = message;
         _isChartModalVisible = true;
-        
+
         // 初始化列选项
         InitializeAvailableColumns();
-        
+
         await InvokeAsync(StateHasChanged);
 
         try
@@ -1289,7 +1383,7 @@
         catch (Exception ex)
         {
             Console.WriteLine($"渲染图表失败: {ex.Message}");
-            _= MessageService.Error("渲染图表失败");
+            _ = MessageService.Error("渲染图表失败");
         }
     }
 
@@ -1302,13 +1396,13 @@
     {
         _isChartModalVisible = false;
         _currentChartMessage = null;
-        
+
         // 重置图表控制状态
         _availableColumns.Clear();
         _selectedCategoryColumn = null;
         _selectedValueColumns = new List<string>();
         _selectedChartType = "bar";
-        
+
         try
         {
             await JSRuntime.InvokeVoidAsync("echartsInterop.dispose", "chatChartContainer");
@@ -1325,7 +1419,7 @@
         catch (Exception ex)
         {
             Console.WriteLine($"导出失败: {ex.Message}");
-            _= MessageService.Error("导出失败");
+            _ = MessageService.Error("导出失败");
         }
     }
 
@@ -1350,23 +1444,23 @@
         try
         {
             _clearingHistory = true;
-            
+
             var success = await ChatService.ClearChatHistoryAsync(_selectedConnectionId);
-            
+
             if (success)
             {
                 _chatHistory.Clear();
-                _= MessageService.Success("聊天记录已清空");
+                _ = MessageService.Success("聊天记录已清空");
             }
             else
             {
-                _= MessageService.Error("清空失败，请重试");
+                _ = MessageService.Error("清空失败，请重试");
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"清空聊天记录失败: {ex.Message}");
-            _= MessageService.Error($"清空失败：{ex.Message}");
+            _ = MessageService.Error($"清空失败：{ex.Message}");
         }
         finally
         {
@@ -1383,7 +1477,7 @@
     {
         // 找到用户的原始问题
         var userMessage = FindUserMessageForResponse(message);
-        
+
         _correctionData = new CorrectionData
         {
             UserQuestion = userMessage?.Message ?? "",
@@ -1391,7 +1485,7 @@
             CorrectSql = message.SqlQuery ?? "", // 初始化为原始SQL，用户可以修改
             Description = ""
         };
-        
+
         _showCorrectionModal = true;
     }
 
@@ -1409,7 +1503,7 @@
         try
         {
             var success = await ChatService.CreateExampleFromCorrectionAsync(
-                _selectedConnectionId,
+                _selectedConnectionId!,
                 _correctionData.UserQuestion,
                 _correctionData.CorrectSql,
                 _correctionData.OriginalSql,
@@ -1457,5 +1551,289 @@
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// 触发Excel文件选择
+    /// </summary>
+    private async Task TriggerExcelFileSelect()
+    {
+        await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('excelFileInput').click()");
+    }
+
+    /// <summary>
+    /// 处理Excel文件选择
+    /// </summary>
+    /// <param name="e">文件选择事件参数</param>
+    private async Task OnExcelFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        // 验证文件类型
+        var allowedExtensions = new[] { ".xlsx", ".xls" };
+        var fileExtension = Path.GetExtension(file.Name).ToLowerInvariant();
+        if (!allowedExtensions.Contains(fileExtension))
+        {
+            await MessageService.Warning("请选择Excel文件(.xlsx或.xls)");
+            return;
+        }
+
+        // 验证文件大小 (限制为10MB)
+        const long maxFileSize = 10 * 1024 * 1024;
+        if (file.Size > maxFileSize)
+        {
+            await MessageService.Warning("文件大小不能超过10MB");
+            return;
+        }
+
+        _uploadingExcel = true;
+        StateHasChanged();
+
+        try
+        {
+            await ImportExcelToSqlite(file);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Excel上传失败: {ex.Message}");
+            await MessageService.Error($"Excel上传失败: {ex.Message}");
+        }
+        finally
+        {
+            _uploadingExcel = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// 将Excel导入为SQLite数据库
+    /// </summary>
+    /// <param name="file">Excel文件</param>
+    private async Task ImportExcelToSqlite(IBrowserFile file)
+    {
+        // 创建临时目录
+        var uploadsDir = Path.Combine(AppContext.BaseDirectory, "temp_uploads");
+        Directory.CreateDirectory(uploadsDir);
+
+        var excelPath = Path.Combine(uploadsDir, $"{Guid.NewGuid()}_{file.Name}");
+
+        try
+        {
+            // 保存Excel文件到临时位置
+            await using (var fs = File.Create(excelPath))
+            {
+                await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(fs);
+            }
+
+            // 创建SQLite数据库
+            var dbFolder = Path.Combine(AppContext.BaseDirectory, "excel_dbs");
+            Directory.CreateDirectory(dbFolder);
+
+            var dbFileName = $"excel_{DateTime.Now:yyyyMMdd_HHmmss}_{Path.GetFileNameWithoutExtension(file.Name)}";
+            var sqlitePath = Path.Combine(dbFolder, $"{dbFileName}.db");
+
+            await BuildSqliteFromExcelAsync(excelPath, sqlitePath);
+
+            // 创建数据库连接配置
+            var connectionConfig = new DatabaseConnectionConfig
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = $"Excel导入 - {Path.GetFileNameWithoutExtension(file.Name)}",
+                DbType = DatabaseTypeEnum.SQLite,
+                Server = "",
+                Port = 0, // SQLite不需要端口，设置为0
+                Database = sqlitePath,
+                Username = "",
+                Password = "",
+                ConnectionString = $"Data Source={sqlitePath};",
+                Description = $"从Excel文件 {file.Name} 自动导入",
+                CreateTime = DateTime.Now
+            };
+
+            // 保存连接配置
+            var (success, _, message) = await DatabaseConnectionRepository.UpdateWithSchemaCleanupAsync(connectionConfig);
+            if (!success)
+            {
+                throw new Exception($"保存数据库连接配置失败: {message}");
+            }
+
+            // 更新连接列表并选择新创建的连接
+            await LoadDatabaseConnections();
+            _uploadedExcelConnection = connectionConfig;
+            _selectedConnectionId = connectionConfig.Id;
+
+            // 加载聊天历史
+            await OnDatabaseSelected(connectionConfig);
+
+            // 自动训练Schema
+            try
+            {
+                await MessageService.Info("正在自动训练数据库Schema，请稍候...");
+                var schemaTrainResult = await SchemaTrainingService.TrainDatabaseSchemaAsync(connectionConfig.Id);
+
+                if (schemaTrainResult)
+                {
+                    await MessageService.Success($"Excel文件已成功导入为SQLite数据库，Schema训练完成，可以开始问答了！");
+                }
+                else
+                {
+                    await MessageService.Warning($"Excel文件导入成功，但Schema训练失败。请手动训练Schema后再进行问答。");
+                }
+            }
+            catch (Exception schemaEx)
+            {
+                Console.WriteLine($"Schema训练失败: {schemaEx.Message}");
+                await MessageService.Warning($"Excel文件导入成功，但Schema训练失败: {schemaEx.Message}。请手动训练Schema后再进行问答。");
+            }
+        }
+        finally
+        {
+            // 清理临时文件
+            try
+            {
+                if (File.Exists(excelPath))
+                {
+                    File.Delete(excelPath);
+                }
+            }
+            catch { }
+        }
+    }
+
+    /// <summary>
+    /// 从Excel构建SQLite数据库
+    /// </summary>
+    /// <param name="excelPath">Excel文件路径</param>
+    /// <param name="sqlitePath">SQLite数据库路径</param>
+    private async Task BuildSqliteFromExcelAsync(string excelPath, string sqlitePath)
+    {
+        // 删除已存在的数据库文件
+        if (File.Exists(sqlitePath))
+        {
+            try { File.Delete(sqlitePath); } catch { }
+        }
+
+        // 创建SQLite数据库连接
+        using var db = new SqlSugar.SqlSugarClient(new SqlSugar.ConnectionConfig
+        {
+            ConnectionString = $"Data Source={sqlitePath};",
+            DbType = SqlSugar.DbType.Sqlite,
+            IsAutoCloseConnection = true
+        });
+
+        // 读取Excel的所有工作表
+        var sheets = MiniExcel.GetSheetNames(excelPath);
+        foreach (var sheet in sheets)
+        {
+            var rows = MiniExcel.Query(excelPath, sheetName: sheet).ToList();
+            if (rows.Count == 0) continue;
+
+            // 获取列名
+            var first = (IDictionary<string, object>)rows[0];
+            var columns = first.Keys.ToList();
+
+            // 生成安全的表名
+            var safeTableName = ToSafeIdentifier(sheet);
+
+            // 推断列的数据类型并生成建表SQL
+            var columnDefinitions = new List<string>();
+            foreach (var col in columns)
+            {
+                string dataType = "TEXT";
+
+                // 通过检查前几行数据来推断数据类型
+                foreach (IDictionary<string, object> row in rows.Take(10))
+                {
+                    var value = row[col];
+                    if (value == null) continue;
+
+                    if (value is int or long)
+                    {
+                        dataType = "INTEGER";
+                        break;
+                    }
+                    if (value is double or float or decimal)
+                    {
+                        dataType = "REAL";
+                        break;
+                    }
+                }
+
+                columnDefinitions.Add($"[{col}] {dataType}");
+            }
+
+            // 创建表
+            string createTableSql = $"CREATE TABLE IF NOT EXISTS [{safeTableName}] ({string.Join(",", columnDefinitions)});";
+            await db.Ado.ExecuteCommandAsync(createTableSql);
+
+            // 批量插入数据
+            foreach (IDictionary<string, object> row in rows)
+            {
+                var columnNames = string.Join(",", columns.Select(c => $"[{c}]"));
+                var parameterNames = string.Join(",", columns.Select(c => "@" + c));
+                string insertSql = $"INSERT INTO [{safeTableName}] ({columnNames}) VALUES ({parameterNames});";
+
+                var parameters = columns.Select(c => new SqlSugar.SugarParameter("@" + c, row[c] ?? DBNull.Value)).ToArray();
+                await db.Ado.ExecuteCommandAsync(insertSql, parameters);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 将字符串转换为安全的数据库标识符
+    /// </summary>
+    /// <param name="name">原始名称</param>
+    /// <returns>安全的标识符</returns>
+    private static string ToSafeIdentifier(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "sheet";
+
+        var safe = new string(name.Where(ch => char.IsLetterOrDigit(ch) || ch == '_' || ch == '-').ToArray());
+        if (string.IsNullOrWhiteSpace(safe)) safe = "sheet";
+
+        return safe;
+    }
+
+    /// <summary>
+    /// 清除已上传的Excel连接
+    /// </summary>
+    private async Task ClearUploadedExcel()
+    {
+        if (_uploadedExcelConnection == null) return;
+
+        try
+        {
+            // 删除数据库文件
+            if (!string.IsNullOrEmpty(_uploadedExcelConnection.Database) && File.Exists(_uploadedExcelConnection.Database))
+            {
+                try
+                {
+                    File.Delete(_uploadedExcelConnection.Database);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"删除数据库文件失败: {ex.Message}");
+                }
+            }
+
+            // 从数据库中删除连接配置
+            await DatabaseConnectionRepository.DeleteAsync(_uploadedExcelConnection.Id);
+
+            // 重新加载连接列表
+            await LoadDatabaseConnections();
+
+            // 清除当前选择
+            _uploadedExcelConnection = null;
+            _selectedConnectionId = null;
+            _chatHistory.Clear();
+
+            await MessageService.Success("已成功移除Excel导入的数据库");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"清除Excel连接失败: {ex.Message}");
+            await MessageService.Error($"清除失败: {ex.Message}");
+        }
     }
 }

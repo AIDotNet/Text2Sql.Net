@@ -147,6 +147,42 @@
             <param name="responseMessage">AI响应消息</param>
             <returns>对应的用户消息</returns>
         </member>
+        <member name="M:Text2Sql.Net.Web.Pages.DatabaseConnection.DatabaseChat.TriggerExcelFileSelect">
+            <summary>
+            触发Excel文件选择
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Web.Pages.DatabaseConnection.DatabaseChat.OnExcelFileSelected(Microsoft.AspNetCore.Components.Forms.InputFileChangeEventArgs)">
+            <summary>
+            处理Excel文件选择
+            </summary>
+            <param name="e">文件选择事件参数</param>
+        </member>
+        <member name="M:Text2Sql.Net.Web.Pages.DatabaseConnection.DatabaseChat.ImportExcelToSqlite(Microsoft.AspNetCore.Components.Forms.IBrowserFile)">
+            <summary>
+            将Excel导入为SQLite数据库
+            </summary>
+            <param name="file">Excel文件</param>
+        </member>
+        <member name="M:Text2Sql.Net.Web.Pages.DatabaseConnection.DatabaseChat.BuildSqliteFromExcelAsync(System.String,System.String)">
+            <summary>
+            从Excel构建SQLite数据库
+            </summary>
+            <param name="excelPath">Excel文件路径</param>
+            <param name="sqlitePath">SQLite数据库路径</param>
+        </member>
+        <member name="M:Text2Sql.Net.Web.Pages.DatabaseConnection.DatabaseChat.ToSafeIdentifier(System.String)">
+            <summary>
+            将字符串转换为安全的数据库标识符
+            </summary>
+            <param name="name">原始名称</param>
+            <returns>安全的标识符</returns>
+        </member>
+        <member name="M:Text2Sql.Net.Web.Pages.DatabaseConnection.DatabaseChat.ClearUploadedExcel">
+            <summary>
+            清除已上传的Excel连接
+            </summary>
+        </member>
         <member name="M:Text2Sql.Net.Web.Pages.DatabaseConnection.SelectTables.RemoveSelect(Text2Sql.Net.Repositories.Text2Sql.DatabaseSchema.TableInfo)">
             <summary>
             移除已选择的表
