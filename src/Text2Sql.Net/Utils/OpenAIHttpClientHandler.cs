@@ -7,12 +7,21 @@ namespace Text2Sql.Net.Utils
 {
     internal class OpenAIHttpClientHandler : HttpClientHandler
     {
+        private readonly bool _isEmbeddingHandler;
+
+        public OpenAIHttpClientHandler(bool isEmbeddingHandler = false)
+        {
+            _isEmbeddingHandler = isEmbeddingHandler;
+        }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             UriBuilder uriBuilder;
             Regex regex = new Regex(@"(https?)://([^/:]+)(:\d+)?/(.*)");
-            Match match = regex.Match(Text2SqlOpenAIOption.EndPoint);
+            
+            // 根据是否是向量模型处理器选择不同的端点
+            string endpoint = _isEmbeddingHandler ? Text2SqlOpenAIOption.GetEmbeddingEndPoint : Text2SqlOpenAIOption.EndPoint;
+            Match match = regex.Match(endpoint);
 
             var mediaType = request.Content.Headers.ContentType.MediaType;
             string requestBody = (await request.Content.ReadAsStringAsync()).Unescape();

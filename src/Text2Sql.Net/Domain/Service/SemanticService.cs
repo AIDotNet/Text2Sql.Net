@@ -48,10 +48,10 @@ namespace Text2Sql.Net.Domain.Service
                 throw new InvalidOperationException("GraphDBConnection error failed to initialize memory store.");
             }
 
-            var handler = new OpenAIHttpClientHandler();
+            var handler = new OpenAIHttpClientHandler(isEmbeddingHandler: true);
             var httpClient = new HttpClient(handler);
             httpClient.Timeout = TimeSpan.FromMinutes(10);
-            var embeddingGenerator = new OpenAITextEmbeddingGenerationService(Text2SqlOpenAIOption.EmbeddingModel, Text2SqlOpenAIOption.Key, httpClient: new HttpClient(handler));
+            var embeddingGenerator = new OpenAITextEmbeddingGenerationService(Text2SqlOpenAIOption.EmbeddingModel, Text2SqlOpenAIOption.GetEmbeddingKey, httpClient: httpClient);
             SemanticTextMemory textMemory = new(memoryStore, embeddingGenerator);
 
             return textMemory;

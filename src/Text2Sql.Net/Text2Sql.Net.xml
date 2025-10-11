@@ -24,6 +24,46 @@
             向量数据维度，PG需要设置
             </summary>
         </member>
+        <member name="P:Text2Sql.Net.Options.Text2SqlOpenAIOption.EndPoint">
+            <summary>
+            聊天模型的端点地址
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Options.Text2SqlOpenAIOption.Key">
+            <summary>
+            聊天模型的API密钥
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Options.Text2SqlOpenAIOption.EmbeddingEndPoint">
+            <summary>
+            向量模型的端点地址（如果为空则使用聊天模型的EndPoint）
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Options.Text2SqlOpenAIOption.EmbeddingKey">
+            <summary>
+            向量模型的API密钥（如果为空则使用聊天模型的Key）
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Options.Text2SqlOpenAIOption.ChatModel">
+            <summary>
+            聊天模型名称
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Options.Text2SqlOpenAIOption.EmbeddingModel">
+            <summary>
+            向量模型名称
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Options.Text2SqlOpenAIOption.GetEmbeddingEndPoint">
+            <summary>
+            获取向量模型的端点地址（如果EmbeddingEndPoint为空则返回EndPoint）
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Options.Text2SqlOpenAIOption.GetEmbeddingKey">
+            <summary>
+            获取向量模型的API密钥（如果EmbeddingKey为空则返回Key）
+            </summary>
+        </member>
         <member name="T:Text2Sql.Net.Domain.Interface.IAdvancedPromptService">
             <summary>
             高级Prompt工程服务接口
