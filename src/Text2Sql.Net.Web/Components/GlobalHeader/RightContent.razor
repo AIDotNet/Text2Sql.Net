@@ -1,29 +1,20 @@
 ﻿@namespace Text2Sql.Net.Web.Components
 @inherits AntDomComponentBase
 
-<Space Class="@ClassMapper.Class" Size="@("26")">
-    <button class="github_btn" onclick="window.open('https://github.com/AIDotNet/Text2Sql.Net')"></button>
+<Space Class="@ClassMapper.Class" Align="SpaceAlign.Center">
+    <a class="github-stars" href="https://github.com/AIDotNet/Text2Sql.Net" target="_blank" rel="noopener noreferrer">
+        <img src="http://img.shields.io/github/stars/aidotnet/text2sql.net?style=social" alt="GitHub Stars" />
+    </a>
     @if (string.IsNullOrEmpty(_displayName))
     {
         <Button Type="link" OnClick="NavigateToLogin">登录</Button>
     }
     else
     {
-        <Space>
+    <Space Align="SpaceAlign.Center" Class="user-actions">
             <Avatar Icon="user" />
-            <span>@_displayName</span>
+            <span class="user-name">@_displayName</span>
             <Button Type="link" OnClick="LogoutAsync">退出登录</Button>
         </Space>
     }
 </Space>
-
-
-<style>
-    .github_btn {
-        cursor: pointer;
-        border: none;
-        background-image: url('http://img.shields.io/github/stars/aidotnet/text2sql.net?style=social');
-        width: 82px;
-        height: 20px;
-    }
-</style>
