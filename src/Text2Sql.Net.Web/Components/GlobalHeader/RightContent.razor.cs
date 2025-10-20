@@ -1,7 +1,11 @@
 ﻿using AntDesign;
 using AntDesign.ProLayout;
 using Text2Sql.Net.Web.Models;
+using Text2Sql.Net.Web.Services.Authentication;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace Text2Sql.Net.Web.Components
 {
@@ -12,6 +16,7 @@ namespace Text2Sql.Net.Web.Components
         private NoticeIconData[] _messages = { };
         private NoticeIconData[] _events = { };
         private int _count = 0;
+        private string? _displayName;
 
         private List<AutoCompleteDataItem<string>> DefaultOptions { get; set; } = new List<AutoCompleteDataItem<string>>
         {
@@ -40,14 +45,20 @@ namespace Text2Sql.Net.Web.Components
             new() { Key = "logout", IconType = "logout", Option = "退出登录"}
         };
 
-        [Inject] protected NavigationManager NavigationManager { get; set; }
+    [Inject] protected NavigationManager NavigationManager { get; set; } = default!;
 
-        [Inject] protected MessageService MessageService { get; set; }
+    [Inject] protected MessageService MessageService { get; set; } = default!;
+
+    [Inject] protected AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+
+    [Inject] protected ILoginService LoginService { get; set; } = default!;
 
         protected override async Task OnInitializedAsync()
         {
             await base.OnInitializedAsync();
             SetClassMap();
+            AuthenticationStateProvider.AuthenticationStateChanged += HandleAuthenticationStateChanged;
+            await UpdateUserAsync();
 
         }
 
@@ -76,7 +87,7 @@ namespace Text2Sql.Net.Web.Components
                     NavigationManager.NavigateTo("/account/settings");
                     break;
                 case "logout":
-                    NavigationManager.NavigateTo("/user/login");
+                    _ = LogoutAsync();
                     break;
             }
         }
@@ -119,6 +130,62 @@ namespace Text2Sql.Net.Web.Components
         public async Task HandleViewMore(string key)
         {
             await MessageService.Info("Click on view more");
+        }
+
+        private async Task UpdateUserAsync()
+        {
+            var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            UpdateFromState(state);
+        }
+
+        private void HandleAuthenticationStateChanged(Task<AuthenticationState> task)
+        {
+            _ = UpdateFromTaskAsync(task);
+        }
+
+        private async Task UpdateFromTaskAsync(Task<AuthenticationState> task)
+        {
+            var state = await task;
+            UpdateFromState(state);
+            await InvokeAsync(StateHasChanged);
+        }
+
+        private void UpdateFromState(AuthenticationState state)
+        {
+            if (state.User.Identity?.IsAuthenticated == true)
+            {
+                _displayName = state.User.Identity.Name;
+                if (string.IsNullOrWhiteSpace(_displayName))
+                {
+                    _displayName = state.User.FindFirstValue(ClaimTypes.Name) ?? state.User.Identity.Name;
+                }
+            }
+            else
+            {
+                _displayName = null;
+            }
+        }
+
+        private void NavigateToLogin()
+        {
+            NavigationManager.NavigateTo("/login", true);
+        }
+
+        private async Task LogoutAsync()
+        {
+            await LoginService.SignOutAsync();
+            await MessageService.Success("已退出登录");
+            NavigationManager.NavigateTo("/login", true);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                AuthenticationStateProvider.AuthenticationStateChanged -= HandleAuthenticationStateChanged;
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

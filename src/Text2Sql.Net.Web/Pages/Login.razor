@@ -1,0 +1,76 @@
+@page "/login"
+@layout UserLayout
+@attribute [AllowAnonymous]
+@using AntDesign
+@using AntDesign.Form
+@using Text2Sql.Net.Web.Services.Authentication
+
+@inject NavigationManager NavigationManager
+@inject MessageService MessageService
+@inject ILoginService LoginService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="login-card">
+    <Card Title="欢迎登录" Bordered="true">
+        <Form Model="@_model" Layout="vertical" OnFinish="HandleFinish" OnFinishFailed="HandleFinishFailed">
+            <FormItem Label="用户名" Name="@nameof(LoginParamsType.UserName)" Required>
+                <Input Placeholder="请输入用户名" @bind-Value="_model.UserName" />
+            </FormItem>
+            <FormItem Label="密码" Name="@nameof(LoginParamsType.Password)" Required>
+                <InputPassword Placeholder="请输入密码" @bind-Value="_model.Password" />
+            </FormItem>
+            <FormItem>
+                <Button Type="primary" HtmlType="submit" Loading="@_submitting" Block="true">
+                    登录
+                </Button>
+            </FormItem>
+        </Form>
+    </Card>
+</div>
+
+<style>
+    .login-card {
+        max-width: 360px;
+        margin: 0 auto;
+    }
+</style>
+
+@code {
+    private readonly LoginParamsType _model = new()
+    {
+        UserName = string.Empty,
+        Password = string.Empty
+    };
+    private bool _submitting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated == true)
+        {
+            NavigationManager.NavigateTo("/", true);
+        }
+    }
+
+    private async Task HandleFinish(EditContext context)
+    {
+        _submitting = true;
+        var result = await LoginService.SignInAsync(_model.UserName, _model.Password);
+
+        _submitting = false;
+
+        if (!result.Succeeded)
+        {
+            _= MessageService.Error(result.ErrorMessage ?? "登录失败，请检查用户名或密码");
+            return;
+        }
+
+        _ = MessageService.Success($"欢迎，{result.DisplayName ?? _model.UserName}!");
+        NavigationManager.NavigateTo("/", true);
+    }
+
+    private async Task HandleFinishFailed(EditContext context)
+    {
+        _ = MessageService.Warning("请填写完整的登录信息");
+    }
+}

@@ -4,9 +4,13 @@
 @using System.Net.Http
 @using System.Net.Http.Json
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
 @using Text2Sql.Net.Web
 @using Text2Sql.Net.Web.Models
 @using Text2Sql.Net.Web.Components
+@using Text2Sql.Net.Web.Shared
+@attribute [Authorize]

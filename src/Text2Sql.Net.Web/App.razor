@@ -1,13 +1,21 @@
-<Router AppAssembly="@typeof(Program).Assembly">
-    <Found Context="routeData">
-        <CascadingValue Value="routeData">
-            <RouteView RouteData="@routeData" DefaultLayout="@typeof(BasicLayout)" />
-        </CascadingValue>
-    </Found>
-    <NotFound>
-        <LayoutView Layout="@typeof(BasicLayout)">
-            <p>Sorry, there's nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
+@attribute [AllowAnonymous]
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(Program).Assembly">
+        <Found Context="routeData">
+            <CascadingValue Value="routeData">
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(BasicLayout)">
+                    <NotAuthorized>
+                        <RedirectToLogin />
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+            </CascadingValue>
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(BasicLayout)">
+                <p>Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
 <AntContainer />

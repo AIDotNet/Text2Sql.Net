@@ -1,5 +1,6 @@
 ﻿@namespace Text2Sql.Net.Web
 @inherits LayoutComponentBase
+@attribute [Authorize]
 
 <AntDesign.ProLayout.BasicLayout Logo="@("https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg")" MenuData="_menuData">
     <RightContentRender>
@@ -24,7 +25,7 @@
 {
     private MenuDataItem[] _menuData = { };
 
-    [Inject] public HttpClient HttpClient { get; set; }
+    [Inject] public HttpClient HttpClient { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {

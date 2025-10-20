@@ -2,8 +2,12 @@ using AntDesign.ProLayout;
 using Text2Sql.Net;
 using Text2Sql.Net.Options;
 using Text2Sql.Net.Web.Mock;
+using Text2Sql.Net.Web.Options;
+using Text2Sql.Net.Web.Services.Authentication;
 using Text2Sql.Net.Web.Tools;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -22,6 +26,12 @@ builder.Services.AddScoped(sp => new HttpClient
     BaseAddress = new Uri(sp.GetService<NavigationManager>()!.BaseUri)
 });
 builder.Services.Configure<ProSettings>(builder.Configuration.GetSection("ProSettings"));
+builder.Services.Configure<AuthenticationOptions>(builder.Configuration.GetSection("Authentication"));
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<ProtectedSessionStorage>();
+builder.Services.AddScoped<SessionAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<SessionAuthenticationStateProvider>());
+builder.Services.AddScoped<ILoginService, LoginService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
