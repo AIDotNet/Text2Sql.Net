@@ -283,25 +283,27 @@ namespace Text2Sql.Net.Domain.Service
             }
 
             var promptBuilder = new StringBuilder();
-            promptBuilder.AppendLine("以下是一些相关的问答示例，请参考这些示例的模式和风格来生成SQL查询：");
-            promptBuilder.AppendLine();
 
             for (int i = 0; i < examples.Count; i++)
             {
                 var example = examples[i];
-                promptBuilder.AppendLine($"示例 {i + 1}:");
-                promptBuilder.AppendLine($"问题: {example.Question}");
-                promptBuilder.AppendLine($"SQL: {example.SqlQuery}");
+                promptBuilder.AppendLine($"**示例 {i + 1}**:");
+                promptBuilder.AppendLine();
+                promptBuilder.AppendLine($"**用户问题**: {example.Question}");
+                promptBuilder.AppendLine();
+                promptBuilder.AppendLine($"**标准SQL查询**:");
+                promptBuilder.AppendLine("```sql");
+                promptBuilder.AppendLine(example.SqlQuery);
+                promptBuilder.AppendLine("```");
                 
                 if (!string.IsNullOrEmpty(example.Description))
                 {
-                    promptBuilder.AppendLine($"说明: {example.Description}");
+                    promptBuilder.AppendLine();
+                    promptBuilder.AppendLine($"**说明**: {example.Description}");
                 }
                 
                 promptBuilder.AppendLine();
             }
-
-            promptBuilder.AppendLine("请根据上述示例的风格和模式，为当前用户问题生成准确的SQL查询：");
             
             return promptBuilder.ToString();
         }

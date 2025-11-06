@@ -316,7 +316,29 @@ namespace Text2Sql.Net.Domain.Service
             prompt.AppendLine($"当前时间:{DateTime.Now}");
             prompt.AppendLine();
 
-            // 2. 数据库信息
+            // 2. 用户提供的问答示例（最高优先级 - 移到最前面）
+            if (!string.IsNullOrEmpty(examplesPrompt))
+            {
+                prompt.AppendLine("## 【重要】参考示例 - 务必遵循");
+                prompt.AppendLine();
+                prompt.AppendLine("**以下是与当前查询高度相关的实际问答示例，这些示例来自相同的数据库环境，具有极高的参考价值。**");
+                prompt.AppendLine();
+                prompt.AppendLine("**请特别注意：**");
+                prompt.AppendLine("1. 这些示例展示了在当前数据库中解决类似问题的正确方法");
+                prompt.AppendLine("2. 必须严格参考示例中的SQL编写风格、表关联方式和查询模式");
+                prompt.AppendLine("3. 示例中使用的表名、字段名、JOIN方式都是针对当前数据库优化过的");
+                prompt.AppendLine("4. 优先采用示例中展示的查询结构和技巧");
+                prompt.AppendLine();
+                prompt.AppendLine("---");
+                prompt.AppendLine();
+                prompt.AppendLine(examplesPrompt);
+                prompt.AppendLine("---");
+                prompt.AppendLine();
+                prompt.AppendLine("**请基于以上示例的模式和风格来生成当前查询的SQL语句。**");
+                prompt.AppendLine();
+            }
+
+            // 3. 数据库信息
             prompt.AppendLine("## 数据库环境");
             prompt.AppendLine($"- **数据库类型**: {dbType}");
             prompt.AppendLine("- **表结构信息**:");
@@ -325,21 +347,12 @@ namespace Text2Sql.Net.Domain.Service
             prompt.AppendLine("```");
             prompt.AppendLine();
 
-            // 3. 用户提供的问答示例（优先级更高）
-            if (!string.IsNullOrEmpty(examplesPrompt))
-            {
-                prompt.AppendLine("## 相关问答示例");
-                prompt.AppendLine();
-                prompt.AppendLine("以下是与您的查询相关的高质量示例，请重点参考这些示例的模式和风格：");
-                prompt.AppendLine();
-                prompt.AppendLine(examplesPrompt);
-                prompt.AppendLine();
-            }
-
             // 4. 内置渐进式示例（从简单到复杂）
             if (examples.Count > 0)
             {
                 prompt.AppendLine("## 通用查询示例（按复杂度递增）");
+                prompt.AppendLine();
+                prompt.AppendLine("以下示例展示了不同复杂度的SQL查询模式：");
                 prompt.AppendLine();
 
                 for (int i = 0; i < examples.Count; i++)
@@ -418,6 +431,14 @@ namespace Text2Sql.Net.Domain.Service
             // 8. 输出要求
             prompt.AppendLine("## 输出要求");
             prompt.AppendLine();
+            if (!string.IsNullOrEmpty(examplesPrompt))
+            {
+                prompt.AppendLine("**特别提醒：上面提供的参考示例非常重要，请务必：**");
+                prompt.AppendLine("- 参考示例中的SQL结构和编写风格");
+                prompt.AppendLine("- 使用示例中展示的表关联方式");
+                prompt.AppendLine("- 借鉴示例中的查询技巧和模式");
+                prompt.AppendLine();
+            }
             prompt.AppendLine("请按照以下格式输出：");
             prompt.AppendLine();
             prompt.AppendLine("1. **分析过程** (可选，根据用户偏好):");
