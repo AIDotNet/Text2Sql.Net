@@ -10,6 +10,10 @@ using Text2Sql.Net.Domain.Service;
 using Text2Sql.Net.Repositories.Text2Sql.DatabaseSchema;
 using Text2Sql.Net.Repositories.Text2Sql.SchemaEmbedding;
 using Microsoft.SemanticKernel.Memory;
+using Text2Sql.Net.Repositories.Text2Sql.User;
+using Text2Sql.Net.Repositories.Text2Sql.Role;
+using Text2Sql.Net.Repositories.Text2Sql.UserRole;
+using Text2Sql.Net.Repositories.Text2Sql.RoleDataSource;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -58,6 +62,14 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<IDatabaseSchemaRepository, DatabaseSchemaRepository>();
             services.AddScoped<ISchemaEmbeddingRepository, SchemaEmbeddingRepository>();
             services.AddScoped<ISchemaTrainingService, SchemaTrainingService>();
+            
+            // 注册用户和角色管理相关服务
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IRoleRepository, RoleRepository>();
+            services.AddScoped<IUserRoleRepository, UserRoleRepository>();
+            services.AddScoped<IRoleDataSourceRepository, RoleDataSourceRepository>();
+            services.AddScoped<IUserManagementService, UserManagementService>();
+            services.AddScoped<IRoleManagementService, RoleManagementService>();
             
             // 注册内存存储
             services.AddSingleton<IMemoryStore, VolatileMemoryStore>();
