@@ -422,6 +422,46 @@
             <param name="examples">示例列表</param>
             <returns>格式化的提示词字符串</returns>
         </member>
+        <member name="T:Text2Sql.Net.Domain.Interface.IRoleManagementService">
+            <summary>
+            角色管理服务接口
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IRoleManagementService.GetRolesAsync">
+            <summary>
+            获取角色列表
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IRoleManagementService.GetRoleByIdAsync(System.String)">
+            <summary>
+            根据ID获取角色
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IRoleManagementService.CreateRoleAsync(Text2Sql.Net.Repositories.Text2Sql.Role.Role)">
+            <summary>
+            创建角色
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IRoleManagementService.UpdateRoleAsync(Text2Sql.Net.Repositories.Text2Sql.Role.Role)">
+            <summary>
+            更新角色
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IRoleManagementService.DeleteRoleAsync(System.String)">
+            <summary>
+            删除角色
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IRoleManagementService.GetRoleDataSourcesAsync(System.String)">
+            <summary>
+            获取角色的数据源列表
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IRoleManagementService.AssignDataSourcesToRoleAsync(System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+            为角色分配数据源
+            </summary>
+        </member>
         <member name="T:Text2Sql.Net.Domain.Interface.ISchemaTrainingService">
             <summary>
             数据库Schema训练服务接口
@@ -491,6 +531,46 @@
             <param name="connectionId">数据库连接ID</param>
             <param name="sqlQuery">SQL查询语句</param>
             <returns>查询结果和可能的错误信息</returns>
+        </member>
+        <member name="T:Text2Sql.Net.Domain.Interface.IUserManagementService">
+            <summary>
+            用户管理服务接口
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IUserManagementService.GetUsersAsync">
+            <summary>
+            获取用户列表
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IUserManagementService.GetUserByIdAsync(System.String)">
+            <summary>
+            根据ID获取用户
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IUserManagementService.CreateUserAsync(Text2Sql.Net.Repositories.Text2Sql.User.User)">
+            <summary>
+            创建用户
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IUserManagementService.UpdateUserAsync(Text2Sql.Net.Repositories.Text2Sql.User.User)">
+            <summary>
+            更新用户
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IUserManagementService.DeleteUserAsync(System.String)">
+            <summary>
+            删除用户
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IUserManagementService.GetUserRolesAsync(System.String)">
+            <summary>
+            获取用户的角色列表
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Interface.IUserManagementService.AssignRolesToUserAsync(System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+            为用户分配角色
+            </summary>
         </member>
         <member name="T:Text2Sql.Net.Domain.Model.DatabaseTypeEnum">
             <summary>
@@ -1560,6 +1640,46 @@
             用于嵌入的文本
             </summary>
         </member>
+        <member name="T:Text2Sql.Net.Domain.Service.RoleManagementService">
+            <summary>
+            角色管理服务实现
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.RoleManagementService.GetRolesAsync">
+            <summary>
+            获取角色列表
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.RoleManagementService.GetRoleByIdAsync(System.String)">
+            <summary>
+            根据ID获取角色
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.RoleManagementService.CreateRoleAsync(Text2Sql.Net.Repositories.Text2Sql.Role.Role)">
+            <summary>
+            创建角色
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.RoleManagementService.UpdateRoleAsync(Text2Sql.Net.Repositories.Text2Sql.Role.Role)">
+            <summary>
+            更新角色
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.RoleManagementService.DeleteRoleAsync(System.String)">
+            <summary>
+            删除角色
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.RoleManagementService.GetRoleDataSourcesAsync(System.String)">
+            <summary>
+            获取角色的数据源列表
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.RoleManagementService.AssignDataSourcesToRoleAsync(System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+            为角色分配数据源
+            </summary>
+        </member>
         <member name="T:Text2Sql.Net.Domain.Service.SchemaTrainingService">
             <summary>
             Schema训练服务实现
@@ -1662,6 +1782,46 @@
         <member name="M:Text2Sql.Net.Domain.Service.SqlExecutionService.GetDbType(System.String)">
             <param name="dbTypeStr">数据库类型字符串</param>
             <returns>对应的SqlSugar数据库类型</returns>
+        </member>
+        <member name="T:Text2Sql.Net.Domain.Service.UserManagementService">
+            <summary>
+            用户管理服务实现
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.UserManagementService.GetUsersAsync">
+            <summary>
+            获取用户列表
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.UserManagementService.GetUserByIdAsync(System.String)">
+            <summary>
+            根据ID获取用户
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.UserManagementService.CreateUserAsync(Text2Sql.Net.Repositories.Text2Sql.User.User)">
+            <summary>
+            创建用户
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.UserManagementService.UpdateUserAsync(Text2Sql.Net.Repositories.Text2Sql.User.User)">
+            <summary>
+            更新用户
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.UserManagementService.DeleteUserAsync(System.String)">
+            <summary>
+            删除用户
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.UserManagementService.GetUserRolesAsync(System.String)">
+            <summary>
+            获取用户的角色列表
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Domain.Service.UserManagementService.AssignRolesToUserAsync(System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+            为用户分配角色
+            </summary>
         </member>
         <member name="P:Text2Sql.Net.Model.PageList`1.PageIndex">
             <summary>
@@ -2456,6 +2616,131 @@
         <member name="M:Text2Sql.Net.Repositories.Text2Sql.QAExample.QAExampleRepository.BatchUpdateEnabledAsync(System.Collections.Generic.List{System.String},System.Boolean)">
             <inheritdoc/>
         </member>
+        <member name="T:Text2Sql.Net.Repositories.Text2Sql.Role.IRoleRepository">
+            <summary>
+            角色仓储接口
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.Role.IRoleRepository.GetByCodeAsync(System.String)">
+            <summary>
+            根据角色代码获取角色
+            </summary>
+        </member>
+        <member name="T:Text2Sql.Net.Repositories.Text2Sql.Role.Role">
+            <summary>
+            角色
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.Role.Role.Id">
+            <summary>
+            角色ID
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.Role.Role.Name">
+            <summary>
+            角色名称
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.Role.Role.Code">
+            <summary>
+            角色代码
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.Role.Role.Description">
+            <summary>
+            描述
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.Role.Role.IsEnabled">
+            <summary>
+            是否启用
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.Role.Role.CreateTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.Role.Role.UpdateTime">
+            <summary>
+            更新时间
+            </summary>
+        </member>
+        <member name="T:Text2Sql.Net.Repositories.Text2Sql.Role.RoleRepository">
+            <summary>
+            角色仓储实现
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.Role.RoleRepository.GetByCodeAsync(System.String)">
+            <summary>
+            根据角色代码获取角色
+            </summary>
+        </member>
+        <member name="T:Text2Sql.Net.Repositories.Text2Sql.RoleDataSource.IRoleDataSourceRepository">
+            <summary>
+            角色数据源关联仓储接口
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.RoleDataSource.IRoleDataSourceRepository.GetByRoleIdAsync(System.String)">
+            <summary>
+            根据角色ID获取数据源关联
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.RoleDataSource.IRoleDataSourceRepository.GetByDataSourceIdAsync(System.String)">
+            <summary>
+            根据数据源ID获取角色关联
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.RoleDataSource.IRoleDataSourceRepository.DeleteByRoleIdAsync(System.String)">
+            <summary>
+            删除角色的所有数据源关联
+            </summary>
+        </member>
+        <member name="T:Text2Sql.Net.Repositories.Text2Sql.RoleDataSource.RoleDataSource">
+            <summary>
+            角色数据源关联
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.RoleDataSource.RoleDataSource.Id">
+            <summary>
+            关联ID
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.RoleDataSource.RoleDataSource.RoleId">
+            <summary>
+            角色ID
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.RoleDataSource.RoleDataSource.DataSourceId">
+            <summary>
+            数据源ID (DatabaseConnectionConfig Id)
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.RoleDataSource.RoleDataSource.CreateTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+        <member name="T:Text2Sql.Net.Repositories.Text2Sql.RoleDataSource.RoleDataSourceRepository">
+            <summary>
+            角色数据源关联仓储实现
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.RoleDataSource.RoleDataSourceRepository.GetByRoleIdAsync(System.String)">
+            <summary>
+            根据角色ID获取数据源关联
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.RoleDataSource.RoleDataSourceRepository.GetByDataSourceIdAsync(System.String)">
+            <summary>
+            根据数据源ID获取角色关联
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.RoleDataSource.RoleDataSourceRepository.DeleteByRoleIdAsync(System.String)">
+            <summary>
+            删除角色的所有数据源关联
+            </summary>
+        </member>
         <member name="T:Text2Sql.Net.Repositories.Text2Sql.SchemaEmbedding.ISchemaEmbeddingRepository">
             <summary>
             Schema向量嵌入仓储接口
@@ -2577,6 +2862,141 @@
         </member>
         <member name="M:Text2Sql.Net.Repositories.Text2Sql.SchemaEmbedding.SchemaEmbeddingRepository.DeleteByTableNameAsync(System.String,System.String)">
             <inheritdoc/>
+        </member>
+        <member name="T:Text2Sql.Net.Repositories.Text2Sql.User.IUserRepository">
+            <summary>
+            用户仓储接口
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.User.IUserRepository.GetByUsernameAsync(System.String)">
+            <summary>
+            根据用户名获取用户
+            </summary>
+        </member>
+        <member name="T:Text2Sql.Net.Repositories.Text2Sql.User.User">
+            <summary>
+            用户
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.User.User.Id">
+            <summary>
+            用户ID
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.User.User.Username">
+            <summary>
+            用户名
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.User.User.Password">
+            <summary>
+            密码
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.User.User.DisplayName">
+            <summary>
+            显示名称
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.User.User.Email">
+            <summary>
+            邮箱
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.User.User.IsEnabled">
+            <summary>
+            是否启用
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.User.User.Description">
+            <summary>
+            描述
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.User.User.CreateTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.User.User.UpdateTime">
+            <summary>
+            更新时间
+            </summary>
+        </member>
+        <member name="T:Text2Sql.Net.Repositories.Text2Sql.User.UserRepository">
+            <summary>
+            用户仓储实现
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.User.UserRepository.GetByUsernameAsync(System.String)">
+            <summary>
+            根据用户名获取用户
+            </summary>
+        </member>
+        <member name="T:Text2Sql.Net.Repositories.Text2Sql.UserRole.IUserRoleRepository">
+            <summary>
+            用户角色关联仓储接口
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.UserRole.IUserRoleRepository.GetByUserIdAsync(System.String)">
+            <summary>
+            根据用户ID获取角色关联
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.UserRole.IUserRoleRepository.GetByRoleIdAsync(System.String)">
+            <summary>
+            根据角色ID获取用户关联
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.UserRole.IUserRoleRepository.DeleteByUserIdAsync(System.String)">
+            <summary>
+            删除用户的所有角色关联
+            </summary>
+        </member>
+        <member name="T:Text2Sql.Net.Repositories.Text2Sql.UserRole.UserRole">
+            <summary>
+            用户角色关联
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.UserRole.UserRole.Id">
+            <summary>
+            关联ID
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.UserRole.UserRole.UserId">
+            <summary>
+            用户ID
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.UserRole.UserRole.RoleId">
+            <summary>
+            角色ID
+            </summary>
+        </member>
+        <member name="P:Text2Sql.Net.Repositories.Text2Sql.UserRole.UserRole.CreateTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+        <member name="T:Text2Sql.Net.Repositories.Text2Sql.UserRole.UserRoleRepository">
+            <summary>
+            用户角色关联仓储实现
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.UserRole.UserRoleRepository.GetByUserIdAsync(System.String)">
+            <summary>
+            根据用户ID获取角色关联
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.UserRole.UserRoleRepository.GetByRoleIdAsync(System.String)">
+            <summary>
+            根据角色ID获取用户关联
+            </summary>
+        </member>
+        <member name="M:Text2Sql.Net.Repositories.Text2Sql.UserRole.UserRoleRepository.DeleteByUserIdAsync(System.String)">
+            <summary>
+            删除用户的所有角色关联
+            </summary>
         </member>
         <member name="M:Text2Sql.Net.Utils.ConvertUtils.IsNull(System.Object)">
             <summary>
