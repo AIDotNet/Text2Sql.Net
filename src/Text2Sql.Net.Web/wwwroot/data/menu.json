@@ -18,6 +18,18 @@
     "icon": "question-circle"
   },
   {
+    "path": "/user-management",
+    "name": "用户管理",
+    "key": "user-management",
+    "icon": "user"
+  },
+  {
+    "path": "/role-configuration",
+    "name": "角色配置",
+    "key": "role-configuration",
+    "icon": "team"
+  },
+  {
     "path": "https://antsk.cn",
     "name": "企业解决方案",
     "key": "enterprise-solution",

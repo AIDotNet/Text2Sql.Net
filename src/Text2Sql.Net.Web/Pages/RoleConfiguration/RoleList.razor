@@ -1,0 +1,287 @@
+@page "/role-configuration"
+@using Text2Sql.Net.Domain.Interface
+@using Text2Sql.Net.Repositories.Text2Sql.Role
+@using Text2Sql.Net.Repositories.Text2Sql.DatabaseConnection
+@inject IRoleManagementService RoleManagementService
+@inject IDatabaseConnectionConfigRepository DatabaseConnectionConfigRepository
+@inject MessageService MessageService
+@inject NavigationManager NavigationManager
+
+<PageContainer Title="角色配置">
+    <Extra>
+        <Button Type="primary" Icon="plus" @onclick="ShowCreateModal">
+            创建角色
+        </Button>
+    </Extra>
+    <ChildContent>
+        <Spin Spinning="@_loading">
+            <Table TItem="Role" DataSource="@_roles" Loading="@_loading" Bordered>
+                <PropertyColumn Property="c => c.Name" Title="角色名称" />
+                <PropertyColumn Property="c => c.Code" Title="角色代码" />
+                <PropertyColumn Property="c => c.Description" Title="描述" />
+                <PropertyColumn Property="c => c.IsEnabled" Title="状态">
+                    <Tag Color="@(context.IsEnabled ? "green" : "red")">
+                        @(context.IsEnabled ? "启用" : "禁用")
+                    </Tag>
+                </PropertyColumn>
+                <PropertyColumn Property="c => c.CreateTime" Title="创建时间" Format="yyyy-MM-dd HH:mm" />
+                <ActionColumn Title="操作">
+                    <Space>
+                        <SpaceItem>
+                            <Button Type="link" Size="small" Icon="database" @onclick="() => ShowAssignDataSourcesModal(context)">
+                                分配数据源
+                            </Button>
+                        </SpaceItem>
+                        <SpaceItem>
+                            <Button Type="link" Size="small" Icon="edit" @onclick="() => ShowEditModal(context)">
+                                编辑
+                            </Button>
+                        </SpaceItem>
+                        <SpaceItem>
+                            <Popconfirm Title="确定要删除该角色吗？" OnConfirm="() => DeleteRole(context.Id)">
+                                <Button Type="link" Danger Size="small" Icon="delete">
+                                    删除
+                                </Button>
+                            </Popconfirm>
+                        </SpaceItem>
+                    </Space>
+                </ActionColumn>
+            </Table>
+        </Spin>
+    </ChildContent>
+</PageContainer>
+
+@* 创建/编辑角色模态框 *@
+<Modal Title="@(_editingRole.Id == null ? "创建角色" : "编辑角色")"
+       Visible="_roleModalVisible"
+       OnOk="HandleRoleModalOk"
+       OnCancel="HandleRoleModalCancel">
+    <Form Model="@_editingRole" LabelCol="new ColLayoutParam { Span = 6 }" WrapperCol="new ColLayoutParam { Span = 18 }">
+        <FormItem Label="角色名称" Required>
+            <Input @bind-Value="_editingRole.Name" Placeholder="请输入角色名称" />
+        </FormItem>
+        <FormItem Label="角色代码" Required>
+            <Input @bind-Value="_editingRole.Code" Placeholder="请输入角色代码（英文）" />
+        </FormItem>
+        <FormItem Label="状态">
+            <Switch @bind-Checked="_editingRole.IsEnabled" CheckedChildren="启用" UnCheckedChildren="禁用" />
+        </FormItem>
+        <FormItem Label="描述">
+            <TextArea @bind-Value="_editingRole.Description" Placeholder="请输入角色描述" Rows="3" />
+        </FormItem>
+    </Form>
+</Modal>
+
+@* 分配数据源模态框 *@
+<Modal Title="分配数据源"
+       Visible="_assignDataSourcesModalVisible"
+       OnOk="HandleAssignDataSourcesOk"
+       OnCancel="HandleAssignDataSourcesCancel">
+    <div style="margin-bottom: 16px;">
+        <Text Strong>角色：</Text> @_selectedRole?.Name (@_selectedRole?.Code)
+    </div>
+    @if (_allDataSources.Any())
+    {
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            @foreach (var dataSource in _allDataSources)
+            {
+                <Checkbox Checked="@_selectedDataSourceIds.Contains(dataSource.Id)" 
+                          CheckedChanged="@(e => HandleDataSourceCheckChange(dataSource.Id, e))">
+                    <div style="display: flex; flex-direction: column;">
+                        <Text Strong>@dataSource.Name</Text>
+                        <Text Type="secondary" Style="font-size: 12px;">
+                            <Tag Color="blue">@dataSource.DbType</Tag>
+                            @dataSource.Description
+                        </Text>
+                    </div>
+                </Checkbox>
+            }
+        </div>
+    }
+    else
+    {
+        <Empty Description="@("暂无可用数据源")">
+            <Button Type="link" @onclick="NavigateToDatabaseConnection">
+                前往创建数据源
+            </Button>
+        </Empty>
+    }
+</Modal>
+
+@code {
+    private List<Role> _roles = new();
+    private List<DatabaseConnectionConfig> _allDataSources = new();
+    private bool _loading = false;
+    private bool _roleModalVisible = false;
+    private bool _assignDataSourcesModalVisible = false;
+    private Role _editingRole = new();
+    private Role? _selectedRole;
+    private string[] _selectedDataSourceIds = Array.Empty<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRoles();
+        await LoadDataSources();
+    }
+
+    private async Task LoadRoles()
+    {
+        _loading = true;
+        try
+        {
+            _roles = await RoleManagementService.GetRolesAsync();
+        }
+        catch (Exception ex)
+        {
+            _ = MessageService.Error($"加载角色列表失败：{ex.Message}");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadDataSources()
+    {
+        try
+        {
+            _allDataSources = await DatabaseConnectionConfigRepository.GetListAsync();
+        }
+        catch (Exception ex)
+        {
+            _ = MessageService.Error($"加载数据源列表失败：{ex.Message}");
+        }
+    }
+
+    private void ShowCreateModal()
+    {
+        _editingRole = new Role { IsEnabled = true };
+        _roleModalVisible = true;
+    }
+
+    private void ShowEditModal(Role role)
+    {
+        _editingRole = new Role
+        {
+            Id = role.Id,
+            Name = role.Name,
+            Code = role.Code,
+            IsEnabled = role.IsEnabled,
+            Description = role.Description
+        };
+        _roleModalVisible = true;
+    }
+
+    private async Task HandleRoleModalOk()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_editingRole.Name))
+            {
+                _ = MessageService.Warning("请输入角色名称");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(_editingRole.Code))
+            {
+                _ = MessageService.Warning("请输入角色代码");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(_editingRole.Id))
+            {
+                // 创建新角色
+                await RoleManagementService.CreateRoleAsync(_editingRole);
+                _ = MessageService.Success("创建角色成功");
+            }
+            else
+            {
+                // 更新角色
+                await RoleManagementService.UpdateRoleAsync(_editingRole);
+                _ = MessageService.Success("更新角色成功");
+            }
+
+            _roleModalVisible = false;
+            await LoadRoles();
+        }
+        catch (Exception ex)
+        {
+            _ = MessageService.Error($"操作失败：{ex.Message}");
+        }
+    }
+
+    private void HandleRoleModalCancel()
+    {
+        _roleModalVisible = false;
+    }
+
+    private async Task ShowAssignDataSourcesModal(Role role)
+    {
+        _selectedRole = role;
+        try
+        {
+            var roleDataSources = await RoleManagementService.GetRoleDataSourcesAsync(role.Id);
+            _selectedDataSourceIds = roleDataSources.Select(ds => ds.Id).ToArray();
+            _assignDataSourcesModalVisible = true;
+        }
+        catch (Exception ex)
+        {
+            _ = MessageService.Error($"加载角色数据源失败：{ex.Message}");
+        }
+    }
+
+    private async Task HandleAssignDataSourcesOk()
+    {
+        try
+        {
+            if (_selectedRole != null)
+            {
+                await RoleManagementService.AssignDataSourcesToRoleAsync(_selectedRole.Id, _selectedDataSourceIds.ToList());
+                _ = MessageService.Success("分配数据源成功");
+                _assignDataSourcesModalVisible = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _ = MessageService.Error($"分配数据源失败：{ex.Message}");
+        }
+    }
+
+    private void HandleAssignDataSourcesCancel()
+    {
+        _assignDataSourcesModalVisible = false;
+    }
+
+    private async Task DeleteRole(string roleId)
+    {
+        try
+        {
+            await RoleManagementService.DeleteRoleAsync(roleId);
+            _ = MessageService.Success("删除角色成功");
+            await LoadRoles();
+        }
+        catch (Exception ex)
+        {
+            _ = MessageService.Error($"删除角色失败：{ex.Message}");
+        }
+    }
+
+    private void NavigateToDatabaseConnection()
+    {
+        NavigationManager.NavigateTo("/database-connection");
+    }
+
+    private void HandleDataSourceCheckChange(string dataSourceId, bool isChecked)
+    {
+        var list = _selectedDataSourceIds.ToList();
+        if (isChecked && !list.Contains(dataSourceId))
+        {
+            list.Add(dataSourceId);
+        }
+        else if (!isChecked && list.Contains(dataSourceId))
+        {
+            list.Remove(dataSourceId);
+        }
+        _selectedDataSourceIds = list.ToArray();
+    }
+}

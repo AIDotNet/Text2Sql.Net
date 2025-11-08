@@ -1,0 +1,285 @@
+@page "/user-management"
+@using Text2Sql.Net.Domain.Interface
+@using Text2Sql.Net.Repositories.Text2Sql.User
+@using Text2Sql.Net.Repositories.Text2Sql.Role
+@inject IUserManagementService UserManagementService
+@inject IRoleManagementService RoleManagementService
+@inject MessageService MessageService
+@inject NavigationManager NavigationManager
+
+<PageContainer Title="用户管理">
+    <Extra>
+        <Button Type="primary" Icon="plus" @onclick="ShowCreateModal">
+            创建用户
+        </Button>
+    </Extra>
+    <ChildContent>
+        <Spin Spinning="@_loading">
+            <Table TItem="User" DataSource="@_users" Loading="@_loading" Bordered>
+                <PropertyColumn Property="c => c.Username" Title="用户名" />
+                <PropertyColumn Property="c => c.DisplayName" Title="显示名称" />
+                <PropertyColumn Property="c => c.Email" Title="邮箱" />
+                <PropertyColumn Property="c => c.IsEnabled" Title="状态">
+                    <Tag Color="@(context.IsEnabled ? "green" : "red")">
+                        @(context.IsEnabled ? "启用" : "禁用")
+                    </Tag>
+                </PropertyColumn>
+                <PropertyColumn Property="c => c.CreateTime" Title="创建时间" Format="yyyy-MM-dd HH:mm" />
+                <ActionColumn Title="操作">
+                    <Space>
+                        <SpaceItem>
+                            <Button Type="link" Size="small" Icon="team" @onclick="() => ShowAssignRolesModal(context)">
+                                分配角色
+                            </Button>
+                        </SpaceItem>
+                        <SpaceItem>
+                            <Button Type="link" Size="small" Icon="edit" @onclick="() => ShowEditModal(context)">
+                                编辑
+                            </Button>
+                        </SpaceItem>
+                        <SpaceItem>
+                            <Popconfirm Title="确定要删除该用户吗？" OnConfirm="() => DeleteUser(context.Id)">
+                                <Button Type="link" Danger Size="small" Icon="delete">
+                                    删除
+                                </Button>
+                            </Popconfirm>
+                        </SpaceItem>
+                    </Space>
+                </ActionColumn>
+            </Table>
+        </Spin>
+    </ChildContent>
+</PageContainer>
+
+@* 创建/编辑用户模态框 *@
+<Modal Title="@(_editingUser.Id == null ? "创建用户" : "编辑用户")"
+       Visible="_userModalVisible"
+       OnOk="HandleUserModalOk"
+       OnCancel="HandleUserModalCancel">
+    <Form Model="@_editingUser" LabelCol="new ColLayoutParam { Span = 6 }" WrapperCol="new ColLayoutParam { Span = 18 }">
+        <FormItem Label="用户名" Required>
+            <Input @bind-Value="_editingUser.Username" Placeholder="请输入用户名" />
+        </FormItem>
+        <FormItem Label="密码" Required="@(_editingUser.Id == null)">
+            <InputPassword @bind-Value="_editingUser.Password" Placeholder="@(_editingUser.Id == null ? "请输入密码" : "留空则不修改密码")" />
+        </FormItem>
+        <FormItem Label="显示名称">
+            <Input @bind-Value="_editingUser.DisplayName" Placeholder="请输入显示名称" />
+        </FormItem>
+        <FormItem Label="邮箱">
+            <Input @bind-Value="_editingUser.Email" Placeholder="请输入邮箱" />
+        </FormItem>
+        <FormItem Label="状态">
+            <Switch @bind-Checked="_editingUser.IsEnabled" CheckedChildren="启用" UnCheckedChildren="禁用" />
+        </FormItem>
+        <FormItem Label="描述">
+            <TextArea @bind-Value="_editingUser.Description" Placeholder="请输入描述" Rows="3" />
+        </FormItem>
+    </Form>
+</Modal>
+
+@* 分配角色模态框 *@
+<Modal Title="分配角色"
+       Visible="_assignRolesModalVisible"
+       OnOk="HandleAssignRolesOk"
+       OnCancel="HandleAssignRolesCancel">
+    <div style="margin-bottom: 16px;">
+        <Text Strong>用户：</Text> @_selectedUser?.DisplayName (@_selectedUser?.Username)
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+        @foreach (var role in _allRoles)
+        {
+            <Checkbox Checked="@_selectedRoleIds.Contains(role.Id)" 
+                      CheckedChanged="@(e => HandleRoleCheckChange(role.Id, e))">
+                <div style="display: flex; flex-direction: column;">
+                    <Text Strong>@role.Name</Text>
+                    <Text Type="secondary" Style="font-size: 12px;">@role.Description</Text>
+                </div>
+            </Checkbox>
+        }
+    </div>
+</Modal>
+
+@code {
+    private List<User> _users = new();
+    private List<Role> _allRoles = new();
+    private bool _loading = false;
+    private bool _userModalVisible = false;
+    private bool _assignRolesModalVisible = false;
+    private User _editingUser = new();
+    private User? _selectedUser;
+    private string[] _selectedRoleIds = Array.Empty<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+        await LoadRoles();
+    }
+
+    private async Task LoadUsers()
+    {
+        _loading = true;
+        try
+        {
+            _users = await UserManagementService.GetUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            _ = MessageService.Error($"加载用户列表失败：{ex.Message}");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadRoles()
+    {
+        try
+        {
+            _allRoles = await RoleManagementService.GetRolesAsync();
+        }
+        catch (Exception ex)
+        {
+            _ = MessageService.Error($"加载角色列表失败：{ex.Message}");
+        }
+    }
+
+    private void ShowCreateModal()
+    {
+        _editingUser = new User { IsEnabled = true };
+        _userModalVisible = true;
+    }
+
+    private void ShowEditModal(User user)
+    {
+        _editingUser = new User
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Password = string.Empty, // 编辑时不显示密码
+            DisplayName = user.DisplayName,
+            Email = user.Email,
+            IsEnabled = user.IsEnabled,
+            Description = user.Description
+        };
+        _userModalVisible = true;
+    }
+
+    private async Task HandleUserModalOk()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_editingUser.Username))
+            {
+                _ = MessageService.Warning("请输入用户名");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(_editingUser.Id) && string.IsNullOrWhiteSpace(_editingUser.Password))
+            {
+                _ = MessageService.Warning("请输入密码");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(_editingUser.Id))
+            {
+                // 创建新用户
+                await UserManagementService.CreateUserAsync(_editingUser);
+                _ = MessageService.Success("创建用户成功");
+            }
+            else
+            {
+                // 更新用户
+                if (string.IsNullOrWhiteSpace(_editingUser.Password))
+                {
+                    // 如果密码为空，保留原密码
+                    var existingUser = await UserManagementService.GetUserByIdAsync(_editingUser.Id);
+                    if (existingUser != null)
+                    {
+                        _editingUser.Password = existingUser.Password;
+                    }
+                }
+                await UserManagementService.UpdateUserAsync(_editingUser);
+                _ = MessageService.Success("更新用户成功");
+            }
+
+            _userModalVisible = false;
+            await LoadUsers();
+        }
+        catch (Exception ex)
+        {
+            _ = MessageService.Error($"操作失败：{ex.Message}");
+        }
+    }
+
+    private void HandleUserModalCancel()
+    {
+        _userModalVisible = false;
+    }
+
+    private async Task ShowAssignRolesModal(User user)
+    {
+        _selectedUser = user;
+        try
+        {
+            var userRoles = await UserManagementService.GetUserRolesAsync(user.Id);
+            _selectedRoleIds = userRoles.Select(r => r.Id).ToArray();
+            _assignRolesModalVisible = true;
+        }
+        catch (Exception ex)
+        {
+            _ = MessageService.Error($"加载用户角色失败：{ex.Message}");
+        }
+    }
+
+    private async Task HandleAssignRolesOk()
+    {
+        try
+        {
+            if (_selectedUser != null)
+            {
+                await UserManagementService.AssignRolesToUserAsync(_selectedUser.Id, _selectedRoleIds.ToList());
+                _ = MessageService.Success("分配角色成功");
+                _assignRolesModalVisible = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _ = MessageService.Error($"分配角色失败：{ex.Message}");
+        }
+    }
+
+    private void HandleAssignRolesCancel()
+    {
+        _assignRolesModalVisible = false;
+    }
+
+    private async Task DeleteUser(string userId)
+    {
+        try
+        {
+            await UserManagementService.DeleteUserAsync(userId);
+            _ = MessageService.Success("删除用户成功");
+            await LoadUsers();
+        }
+        catch (Exception ex)
+        {
+            _ = MessageService.Error($"删除用户失败：{ex.Message}");
+        }
+    }
+
+    private void HandleRoleCheckChange(string roleId, bool isChecked)
+    {
+        var list = _selectedRoleIds.ToList();
+        if (isChecked && !list.Contains(roleId))
+        {
+            list.Add(roleId);
+        }
+        else if (!isChecked && list.Contains(roleId))
+        {
+            list.Remove(roleId);
+        }
+        _selectedRoleIds = list.ToArray();
+    }
+}
